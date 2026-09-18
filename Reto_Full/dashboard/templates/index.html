@@ -149,5 +149,122 @@ document.getElementById("form-prediccion").addEventListener("submit", async (e) 
 });
 </script>
 
+<hr style="margin: 40px 0; border-color: #334155;">
+
+<h1>📊 Predicción masiva (CSV / XLSX)</h1>
+
+<form id="form-batch" style="background:#1e293b; padding:20px; border-radius:10px;">
+  <label>Modelo</label>
+  <select name="modelo" id="modelo-batch" style="width:100%; padding:6px 8px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:#e2e8f0; margin-bottom:12px;">
+    <option value="svc">SVC (recomendado)</option>
+    <option value="rf">Random Forest (interpretable)</option>
+  </select>
+
+  <label>Archivo (.csv o .xlsx)</label>
+  <input type="file" id="archivo-batch" accept=".csv,.xlsx" style="width:100%; padding:6px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:#e2e8f0; margin-bottom:12px;">
+
+  <button type="submit" style="width:100%; padding:10px; border:none; border-radius:6px; background:#6366f1; color:white; font-weight:bold; cursor:pointer;">
+    Predecir lote
+  </button>
+</form>
+
+<div id="resultado-batch" style="margin-top:20px; display:none;">
+  <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-bottom:20px;">
+    <div style="background:#1e293b; padding:16px; border-radius:10px; text-align:center;">
+      <div style="color:#94a3b8; font-size:0.85rem;">Total pasajeros</div>
+      <div id="stat-total" style="font-size:1.6rem; font-weight:bold;">-</div>
+    </div>
+    <div style="background:#1e293b; padding:16px; border-radius:10px; text-align:center;">
+      <div style="color:#94a3b8; font-size:0.85rem;">Transportados</div>
+      <div id="stat-transportados" style="font-size:1.6rem; font-weight:bold; color:#16a34a;">-</div>
+    </div>
+    <div style="background:#1e293b; padding:16px; border-radius:10px; text-align:center;">
+      <div style="color:#94a3b8; font-size:0.85rem;">Probabilidad promedio</div>
+      <div id="stat-prob" style="font-size:1.6rem; font-weight:bold;">-</div>
+    </div>
+  </div>
+
+  <div style="background:#1e293b; padding:16px; border-radius:10px; max-height:400px; overflow:auto;">
+    <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+      <thead>
+        <tr style="text-align:left; color:#94a3b8; border-bottom:1px solid #334155;">
+          <th style="padding:6px;">PassengerId</th>
+          <th style="padding:6px;">Transported</th>
+          <th style="padding:6px;">Probabilidad</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-batch-body"></tbody>
+    </table>
+  </div>
+
+  <button id="btn-descargar" style="margin-top:12px; padding:8px 16px; border:none; border-radius:6px; background:#334155; color:#e2e8f0; cursor:pointer;">
+    ⬇ Descargar resultados (CSV)
+  </button>
+</div>
+
+<script>
+let ultimosResultados = [];
+
+document.getElementById("form-batch").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const archivoInput = document.getElementById("archivo-batch");
+  if (!archivoInput.files.length) {
+    alert("Selecciona un archivo .csv o .xlsx primero.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("archivo", archivoInput.files[0]);
+  formData.append("modelo", document.getElementById("modelo-batch").value);
+
+  const resDiv = document.getElementById("resultado-batch");
+  resDiv.style.display = "block";
+  document.getElementById("tabla-batch-body").innerHTML = "<tr><td colspan='3' style='padding:10px;'>Calculando...</td></tr>";
+
+  try {
+    const resp = await fetch("/predict_batch", { method: "POST", body: formData });
+    const data = await resp.json();
+
+    if (data.error) {
+      document.getElementById("tabla-batch-body").innerHTML =
+        `<tr><td colspan='3' style='padding:10px; color:#f87171;'>${data.error}</td></tr>`;
+      return;
+    }
+
+    ultimosResultados = data.resultados;
+
+    document.getElementById("stat-total").textContent = data.total;
+    document.getElementById("stat-transportados").textContent = `${data.transportados} / ${data.total}`;
+    document.getElementById("stat-prob").textContent = `${(data.probabilidad_promedio * 100).toFixed(1)}%`;
+
+    const tbody = document.getElementById("tabla-batch-body");
+    tbody.innerHTML = data.resultados.map(r => `
+      <tr style="border-bottom:1px solid #334155;">
+        <td style="padding:6px;">${r.PassengerId}</td>
+        <td style="padding:6px; color:${r.Transported ? '#16a34a' : '#dc2626'};">${r.Transported ? "Sí" : "No"}</td>
+        <td style="padding:6px;">${(r.Probabilidad * 100).toFixed(1)}%</td>
+      </tr>
+    `).join("");
+  } catch (err) {
+    document.getElementById("tabla-batch-body").innerHTML =
+      `<tr><td colspan='3' style='padding:10px; color:#f87171;'>Error de conexión: ${err}</td></tr>`;
+  }
+});
+
+document.getElementById("btn-descargar").addEventListener("click", () => {
+  if (!ultimosResultados.length) return;
+  const filas = ["PassengerId,Transported,Probabilidad"];
+  ultimosResultados.forEach(r => filas.push(`${r.PassengerId},${r.Transported},${r.Probabilidad}`));
+  const blob = new Blob([filas.join("\n")], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "predicciones_spaceship.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+</script>
+
 </body>
 </html>
