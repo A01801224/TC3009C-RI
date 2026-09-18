@@ -9,7 +9,7 @@ Alejandro Vázquez · Emilio Torres Paul
 
 ---
 
-## 🎯 El problema
+## El problema
 
 Predecir si un pasajero de la nave *Spaceship Titanic* fue transportado
 (`Transported`, booleano) a otra dimensión durante una colisión con una
@@ -17,7 +17,7 @@ anomalía espacial, a partir de sus datos demográficos, de reserva y de
 consumo a bordo. Es un problema de **clasificación binaria** sobre un
 dataset prácticamente balanceado (~50.4% / 49.6%).
 
-## 📁 Estructura del repositorio
+## Estructura del repositorio
 
 ```
 TC3009C-RI/
@@ -47,7 +47,7 @@ TC3009C-RI/
 └── REORDENPROPUESTA.txt
 ```
 
-## 📓 Los tres avances (`Notebooks/`)
+## Los tres avances (`Notebooks/`)
 
 | Avance | Contenido |
 |---|---|
@@ -55,7 +55,7 @@ TC3009C-RI/
 | **2 — Segundo Avance** | Selección de métricas (Accuracy, Precision, Recall, F1) y baseline (~0.5036). Entrenamiento de dos modelos de familias distintas (Regresión Logística vs. Random Forest) y elección de **Random Forest** como mejor modelo. Exploración individual de hiperparámetros, una subsección por integrante. |
 | **3 — Tercer Avance** | Diagnóstico del modelo base (curvas de aprendizaje y de validación), tuning con `RandomizedSearchCV` + `StratifiedKFold`, evaluación final (F1-score, ROC-AUC, matriz de confusión). Componente individual: cada integrante tuneó un modelo de familia distinta (Regresión Logística, SVC, KNN, Naive Bayes, Red Neuronal). Exportación de modelos y conclusión final del equipo. |
 
-## 📦 El entregable consolidado (`Reto_Full/`)
+## El entregable consolidado (`Reto_Full/`)
 
 `Spaceship_Titanic_Solucion.ipynb` reúne, en un solo notebook, las
 decisiones y resultados más importantes de los tres avances —
@@ -85,7 +85,7 @@ basada en el contexto de uso:
 | **SVC** (kernel `rbf`) | **0.8106** | 0.8945 | Implementación principal — mejor Recall, detecta más verdaderos positivos |
 | **Random Forest tuneado** | 0.8050 | **0.8984** | Respaldo interpretable — reglas de decisión explícitas, mejor ordenamiento probabilístico |
 
-## 🖥️ Dashboard (`Reto_Full/dashboard/`)
+## Dashboard (`Reto_Full/dashboard/`)
 
 Interfaz local en Flask para usar los modelos ya entrenados, sin tener que
 volver a correr ningún notebook.
@@ -110,13 +110,13 @@ Abre `http://127.0.0.1:5000` en el navegador. El servidor carga
 `preprocesador.pkl`, `modelo_rf_final.pkl` y `modelo_svc_final.pkl` desde
 `data/modelos_full/` al arrancar.
 
-## 📄 `REORDENPROPUESTA.txt`
+## `REORDENPROPUESTA.txt`
 
 > *(Pendiente: pega aquí el contenido de este archivo o dime en una frase
 > qué documenta, y completo esta sección — no pude leerlo directo desde
 > GitHub.)*
 
-## 🚀 Cómo reproducir el proyecto completo
+## Cómo reproducir el proyecto completo
 
 1. Clona el repositorio y colócate en la raíz.
 2. Corre los notebooks de `Notebooks/` en orden (1 → 2 → 3) si quieres ver
