@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Spaceship Titanic — Predicción</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 700px; margin: 40px auto; background: #0f172a; color: #e2e8f0; }
+  h1 { font-size: 1.4rem; }
+  form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #1e293b; padding: 20px; border-radius: 10px; }
+  label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: #94a3b8; }
+  input, select { width: 100%; padding: 6px 8px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #e2e8f0; }
+  .full { grid-column: 1 / -1; }
+  button { grid-column: 1 / -1; padding: 10px; border: none; border-radius: 6px; background: #6366f1; color: white; font-weight: bold; cursor: pointer; }
+  button:hover { background: #4f46e5; }
+  #resultado { margin-top: 20px; padding: 20px; border-radius: 10px; background: #1e293b; display: none; }
+  .badge { display: inline-block; padding: 6px 14px; border-radius: 999px; font-weight: bold; }
+  .badge.si { background: #16a34a; }
+  .badge.no { background: #dc2626; }
+  .barra-cont { background: #334155; border-radius: 999px; height: 18px; margin-top: 10px; overflow: hidden; }
+  .barra { background: #6366f1; height: 100%; transition: width 0.4s ease; }
+</style>
+</head>
+<body>
+
+<h1>🚀 Spaceship Titanic — Predicción individual</h1>
+
+<form id="form-prediccion">
+  <div>
+    <label>Modelo</label>
+    <select name="modelo" id="modelo">
+      <option value="svc">SVC (recomendado)</option>
+      <option value="rf">Random Forest (interpretable)</option>
+    </select>
+  </div>
+  <div>
+    <label>HomePlanet</label>
+    <select name="HomePlanet">
+      <option>Earth</option><option>Europa</option><option>Mars</option>
+    </select>
+  </div>
+  <div>
+    <label>CryoSleep</label>
+    <select name="CryoSleep" id="CryoSleep">
+      <option value="false">False</option><option value="true">True</option>
+    </select>
+  </div>
+  <div>
+    <label>Destination</label>
+    <select name="Destination">
+      <option>TRAPPIST-1e</option><option>PSO J318.5-22</option><option>55 Cancri e</option>
+    </select>
+  </div>
+  <div>
+    <label>Age</label>
+    <input type="number" name="Age" value="30" min="0" max="100">
+  </div>
+  <div>
+    <label>Deck</label>
+    <select id="Deck">
+      <option>A</option><option>B</option><option>C</option><option>D</option>
+      <option>E</option><option selected>F</option><option>G</option><option>T</option>
+    </select>
+  </div>
+  <div>
+    <label>CabinNum</label>
+    <input type="number" id="CabinNum" value="100" min="0">
+  </div>
+  <div>
+    <label>Side</label>
+    <select id="Side">
+      <option>P</option><option>S</option>
+    </select>
+  </div>
+  <div>
+    <label>RoomService</label>
+    <input type="number" name="RoomService" value="0" min="0">
+  </div>
+  <div>
+    <label>FoodCourt</label>
+    <input type="number" name="FoodCourt" value="0" min="0">
+  </div>
+  <div>
+    <label>ShoppingMall</label>
+    <input type="number" name="ShoppingMall" value="0" min="0">
+  </div>
+  <div>
+    <label>Spa</label>
+    <input type="number" name="Spa" value="0" min="0">
+  </div>
+  <div class="full">
+    <label>VRDeck</label>
+    <input type="number" name="VRDeck" value="0" min="0">
+  </div>
+
+  <button type="submit">Predecir</button>
+</form>
+
+<div id="resultado"></div>
+
+<script>
+document.getElementById("form-prediccion").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const datos = {
+    modelo: form.modelo.value,
+    PassengerId: "0001_01",
+    HomePlanet: form.HomePlanet.value,
+    CryoSleep: form.CryoSleep.value === "true",
+    Cabin: `${document.getElementById("Deck").value}/${document.getElementById("CabinNum").value}/${document.getElementById("Side").value}`,
+    Destination: form.Destination.value,
+    Age: parseFloat(form.Age.value),
+    RoomService: parseFloat(form.RoomService.value),
+    FoodCourt: parseFloat(form.FoodCourt.value),
+    ShoppingMall: parseFloat(form.ShoppingMall.value),
+    Spa: parseFloat(form.Spa.value),
+    VRDeck: parseFloat(form.VRDeck.value),
+  };
+
+  const resDiv = document.getElementById("resultado");
+  resDiv.style.display = "block";
+  resDiv.innerHTML = "Calculando...";
+
+  try {
+    const resp = await fetch("/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(datos),
+    });
+    const data = await resp.json();
+
+    if (data.error) {
+      resDiv.innerHTML = `<span style="color:#f87171">${data.error}</span>`;
+      return;
+    }
+
+    const pct = (data.probabilidad * 100).toFixed(1);
+    const badgeClass = data.transported ? "si" : "no";
+    const badgeTexto = data.transported ? "Transported" : "No Transported";
+
+    resDiv.innerHTML = `
+      <p>Modelo usado: <strong>${data.modelo_usado.toUpperCase()}</strong></p>
+      <span class="badge ${badgeClass}">${badgeTexto}</span>
+      <p style="margin-top:12px;">Probabilidad de ser transportado: <strong>${pct}%</strong></p>
+      <div class="barra-cont"><div class="barra" style="width:${pct}%"></div></div>
+    `;
+  } catch (err) {
+    resDiv.innerHTML = `<span style="color:#f87171">Error de conexión: ${err}</span>`;
+  }
+});
+</script>
+
+</body>
+</html>
